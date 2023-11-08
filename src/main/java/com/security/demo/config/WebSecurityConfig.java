@@ -1,16 +1,17 @@
 package com.security.demo.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+
 
 
 /*
@@ -24,6 +25,14 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class WebSecurityConfig  {
 	
+	@Autowired
+	private SecurityDatabaseService securityService;
+	
+	
+    public void globalUserDetails(AuthenticationManagerBuilder auth) throws Exception {
+        auth.userDetailsService(securityService).passwordEncoder(passwordEncoder());
+    }
+	
 	@Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
@@ -32,12 +41,15 @@ public class WebSecurityConfig  {
         .antMatchers(HttpMethod.POST, "/login").permitAll()
         .antMatchers("/managers").hasAnyRole("MANAGERS")
         .antMatchers("/users").hasAnyRole("USERS","MANAGERS")
-        .anyRequest().authenticated().and().formLogin();        
+        .anyRequest().authenticated().and().httpBasic();
+        //.anyRequest().authenticated().and().formLogin();        
         
         return http.build();
     }
 	
-	@Bean
+	/*
+	 * 
+	 @Bean
     public InMemoryUserDetailsManager userDetailsService() {
 		InMemoryUserDetailsManager manager = new InMemoryUserDetailsManager();
 	    manager.createUser(User.withUsername("user")
@@ -50,6 +62,9 @@ public class WebSecurityConfig  {
 	      .build());
 	    return manager;
     }
+	
+	 * */
+	
 	
 	@Bean
     public PasswordEncoder passwordEncoder() {
